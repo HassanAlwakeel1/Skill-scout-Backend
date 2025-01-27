@@ -1,6 +1,7 @@
 package com.skillscout.model.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.skillscout.model.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -69,6 +70,14 @@ public class User implements UserDetails {
 
     @Column(name = "profile_picture_url")
     private String ProfilePictureURL;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @JsonManagedReference
+    private List<Job> jobs;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @JsonManagedReference
+    private List<Application> applications;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
