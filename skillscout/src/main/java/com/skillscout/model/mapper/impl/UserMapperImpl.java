@@ -1,5 +1,6 @@
 package com.skillscout.model.mapper.impl;
 
+import com.skillscout.model.DTO.ProfileResponseDTO;
 import com.skillscout.model.DTO.UserDTO;
 import com.skillscout.model.entity.User;
 import com.skillscout.model.mapper.UserMapper;
@@ -16,5 +17,10 @@ public class UserMapperImpl implements UserMapper {
     @Override
     public UserDTO userToUserDTO(User user){
         return mapper.map(user,UserDTO.class);
+    }
+
+    @Override
+    public ProfileResponseDTO userToUpdatedProfileDTO(User user){
+        return mapper.map(user,ProfileResponseDTO.class);
     }
 }
