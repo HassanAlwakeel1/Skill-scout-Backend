@@ -18,6 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -55,6 +56,17 @@ public class User implements UserDetails {
     @Column(name = "bio")
     @Size(max = 500, message = "Bio can't exceed 300 characters.")
     private String bio;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_skills",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
+
+    private List<Skill> skills = new ArrayList<>();
+
+    private String profilePhotoURL;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")

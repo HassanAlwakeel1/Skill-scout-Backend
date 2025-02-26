@@ -1,15 +1,18 @@
 package com.skillscout.service.impl;
 
+import com.skillscout.Repository.SkillRepository;
 import com.skillscout.Repository.UserRepository;
 import com.skillscout.exception.ResourceNotFoundException;
 import com.skillscout.model.DTO.ChangePasswordDTO;
 import com.skillscout.model.DTO.ProfileResponseDTO;
 import com.skillscout.model.DTO.UserDTO;
 import com.skillscout.model.DTO.UserProfileDTO;
+import com.skillscout.model.entity.Skill;
 import com.skillscout.model.entity.User;
 import com.skillscout.model.mapper.UserMapper;
 import com.skillscout.service.CloudinaryImageService;
 import com.skillscout.service.UserService;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,7 +22,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,12 +35,15 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
     private CloudinaryImageService cloudinaryImageService;
 
+    private SkillRepository skillRepository;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, CloudinaryImageService cloudinaryImageService) {
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, CloudinaryImageService cloudinaryImageService, SkillRepository skillRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.cloudinaryImageService = cloudinaryImageService;
+        this.skillRepository = skillRepository;
     }
 
     public UserDetailsService userDetailsService(){
@@ -65,27 +74,57 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<UserDTO> getUserById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new ResourceNotFoundException("User","id",userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        // Convert User to UserDTO using ModelMapper
         UserDTO userDTO = userMapper.userToUserDTO(user);
+
+        // Manually set skills and profile picture URL
+        userDTO.setSkills(user.getSkills().stream().map(Skill::getName).toList());
+        userDTO.setProfilePhotoURL(user.getProfilePictureURL());
+
         return ResponseEntity.ok(userDTO);
     }
 
+
     @Override
+    @Transactional
     public ResponseEntity<ProfileResponseDTO> updateUserProfile(UserProfileDTO userProfileDTO, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new ResourceNotFoundException("User","id",userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         user.setFirstName(userProfileDTO.getFirstName());
         user.setLastName(userProfileDTO.getLastName());
         user.setBio(userProfileDTO.getBio());
+
+        // Handle profile picture upload
         MultipartFile photo = userProfileDTO.getProfilePicture();
         if (photo != null && !photo.isEmpty()) {
-            Map uploadImageMap = cloudinaryImageService.upload(photo);
-            String photoUrl = (String)uploadImageMap.get("secure_url");
-            user.setProfilePictureURL(photoUrl);
+            try {
+                Map uploadImageMap = cloudinaryImageService.upload(photo);
+                String photoUrl = (String) uploadImageMap.get("secure_url");
+                user.setProfilePictureURL(photoUrl);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload profile picture: " + e.getMessage());
+            }
         }
+
+        // Handle skills update
+        if (userProfileDTO.getSkills() != null) {
+            List<Skill> newSkills = userProfileDTO.getSkills().stream()
+                    .map(skillName -> skillRepository.findByName(skillName)
+                            .orElseGet(() -> skillRepository.save(new Skill(skillName))))
+                    .collect(Collectors.toList()); // Use mutable list
+
+            user.setSkills(newSkills);
+        }
+
+        // Save is optional in @Transactional but can be kept for clarity
         userRepository.save(user);
+
         ProfileResponseDTO updatedUserProfileDTO = userMapper.userToUpdatedProfileDTO(user);
         return ResponseEntity.ok(updatedUserProfileDTO);
     }
+
+
 }
