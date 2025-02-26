@@ -11,6 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Skill-scout-Backend" target="1.5" />
       <module name="skillscout" target="19" />
     </bytecodeTargetLevel>
   </component>
