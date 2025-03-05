@@ -47,5 +47,15 @@ public class ApplicationController {
         return ResponseEntity.ok("Application status updated successfully.");
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ApplicationDTO>> getUserApplications(@PathVariable Long userId) {
+        return ResponseEntity.ok(applicationService.getApplicationsByUserId(userId));
+    }
+
+    @GetMapping("/job/{jobId}")
+    public ResponseEntity<List<ApplicationDTO>> getJobApplications(@PathVariable Long jobId) {
+        return ResponseEntity.ok(applicationService.getApplicationsByJobId(jobId));
+    }
+
 }
 

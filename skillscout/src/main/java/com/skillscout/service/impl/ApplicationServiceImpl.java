@@ -69,6 +69,30 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationRepository.save(application);
     }
 
+    @Override
+    public List<ApplicationDTO> getApplicationsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Application> applications = applicationRepository.findByUser(user);
+
+        return applications.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ApplicationDTO> getApplicationsByJobId(Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        List<Application> applications = applicationRepository.findByJob(job);
+
+        return applications.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private ApplicationDTO convertToDTO(Application application) {
         return new ApplicationDTO(
                 application.getId(),

@@ -13,4 +13,9 @@ public interface ApplicationService {
     void deleteApplication(Long id);
     void updateApplicationStatus(Long applicationId, ApplicationState newState, Long recruiterId);
 
+    List<ApplicationDTO> getApplicationsByUserId(Long userId);
+
+    List<ApplicationDTO> getApplicationsByJobId(Long jobId);
+
+
 }
