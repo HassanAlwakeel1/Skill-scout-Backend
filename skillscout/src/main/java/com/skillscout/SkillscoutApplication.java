@@ -31,8 +31,8 @@ public class SkillscoutApplication implements CommandLineRunner {
 		if(adminAccount == null){
 			User user = new User();
 			user.setEmail("admin@gmail.com");
-			user.setFirstName("hassan");
-			user.setLastName("gamal");
+			user.setFirstName("admin");
+			user.setLastName("admin");
 			user.setRole(Role.ADMIN);
 			user.setPassword(new BCryptPasswordEncoder().encode("admin"));
 			userRepository.save(user);
